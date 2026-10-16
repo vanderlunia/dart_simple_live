@@ -1,0 +1,31 @@
+name: Build Simple Live APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.x'   # 这个项目需要指定版本
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: ./simple_live_app  # 进入App子目录
+
+      - name: Build Release APK
+        run: flutter build apk --release
+        working-directory: ./simple_live_app  # 在子目录里编译
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: simple-live-apk
+          path: simple_live_app/build/app/outputs/flutter-apk/app-release.apk

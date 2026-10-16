@@ -1,0 +1,40 @@
+name: Build Debug APK Fixed
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.x'
+          channel: 'stable'
+
+      - name: Create Fake Keystore to bypass error
+        run: |
+          cd simple_live_app/android
+          keytool -genkey -v -keystore debug.keystore -storepass 123456 -alias key -keypass 123456 -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          echo "storePassword=123456" > key.properties
+          echo "keyPassword=123456" >> key.properties
+          echo "keyAlias=key" >> key.properties
+          echo "storeFile=debug.keystore" >> key.properties
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: ./simple_live_app
+
+      - name: Build Debug APK
+        run: flutter build apk --debug
+        working-directory: ./simple_live_app
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: simple-live-debug-apk
+          path: simple_live_app/build/app/outputs/flutter-apk/app-debug.apk
